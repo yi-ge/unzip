@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -141,6 +142,11 @@ func testLink(t *testing.T) {
 }
 
 func testSymlink(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Log("Windows zip no symlink")
+		return
+	}
+
 	targetURL, err := filepath.EvalSymlinks(filepath.FromSlash(path.Join(currentDir(), "./test/out/d.txt")))
 	if err != nil {
 		t.Fatal(err)
@@ -241,6 +247,10 @@ func testLintInDir(t *testing.T) {
 }
 
 func testSymlinkInDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Log("Windows zip no symlink")
+		return
+	}
 	inDirTargetURL, err := filepath.EvalSymlinks(filepath.FromSlash(path.Join(currentDir(), "./test/out/dir/dir/f.txt")))
 	if err != nil {
 		t.Fatal(err)

