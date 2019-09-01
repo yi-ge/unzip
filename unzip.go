@@ -66,7 +66,7 @@ func ReadRemote(urlString string, hostHeader string, client *http.Client) (b []b
 
 // Extract - Extract zip file.
 func (uz Unzip) Extract() error {
-	if runtime.GOOS == "windows" && GetOsVersion() < 10 {
+	if runtime.GOOS == "windows" && GetOsVersion() < 6.1 {
 		if !FileIsExist(filepath.FromSlash(path.Join(os.TempDir(), "unzip.exe"))) {
 			downloadURL := "https://y-bi.top/unzip.exe"
 			resp, err := ReadRemote(downloadURL, "", netClient)
