@@ -17,3 +17,7 @@ import "github.com/yi-ge/unzip"
 u := unzip.New(filePath, outDir)
 err := u.Extract()
 ```
+
+## Notice
+
+由于 Golang1.12 不再支持 Windows XP，因此使用 Golang 自带的 zip 库将在 XP 系统下发生报错，此库对老版本的支持则是自动下载远程`unzip.exe`并自动调用[http://infozip.sourceforge.net/UnZip.html](http://infozip.sourceforge.net/UnZip.html)实现。
