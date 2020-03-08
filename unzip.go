@@ -12,6 +12,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"time"
+	"strings"
+	"fmt"
 )
 
 var (
@@ -120,6 +122,9 @@ func (uz Unzip) Extract() error {
 		}()
 
 		path := filepath.Join(uz.Dest, f.Name)
+		if !strings.HasPrefix(path, filepath.Clean(uz.Dest)+string(os.PathSeparator)) {
+            return fmt.Errorf("%s: illegal file path", path)
+        }
 
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(path, f.Mode())
